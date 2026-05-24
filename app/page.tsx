@@ -1,9 +1,9 @@
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-zinc-50">
-      <h1 className="text-4xl font-bold mb-4">
-        Õpetaja ütleb
-      </h1>
+      <h1 className="text-5xl font-bold mb-4 text-blue-600">
+  ÕPETAJA ÜTLEB
+</h1>
 
       <p className="text-zinc-600 mb-8">
         Häälmärkmetest kirjalik tagasiside
