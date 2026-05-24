@@ -20,11 +20,12 @@ export default function Home() {
       </p>
 
       <button
-        onClick={handleMicrophoneClick}
-        className="bg-blue-600 text-white px-8 py-5 rounded-full text-3xl shadow-lg hover:bg-blue-700 transition"
-      >
-        🎤
-      </button>
+  onClick={handleMicrophoneClick}
+  onTouchStart={handleMicrophoneClick}
+  className="bg-blue-600 text-white px-8 py-5 rounded-full text-3xl shadow-lg hover:bg-blue-700 transition"
+>
+  🎤
+</button>
 
       <textarea
         value={text}
