@@ -11,10 +11,7 @@ export default function Home() {
 
   async function startRecording() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
 
       audioChunksRef.current = [];
@@ -24,31 +21,43 @@ export default function Home() {
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/webm",
-        });
+        try {
+          const audioBlob = new Blob(audioChunksRef.current, {
+            type: "audio/webm",
+          });
 
-        const formData = new FormData();
-        formData.append("audio", audioBlob, "recording.webm");
+          const formData = new FormData();
+          formData.append("audio", audioBlob, "recording.webm");
 
-        setText("Saadan heli kõnetuvastusse...");
+          setText("Saadan heli kõnetuvastusse...");
 
-        const response = await fetch("/api/transcribe", {
-          method: "POST",
-          body: formData,
-        });
+          const response = await fetch("/api/transcribe", {
+            method: "POST",
+            body: formData,
+          });
 
-        const data = await response.json();
+          const data = await response.json();
 
-        if (data.text) {
-          setText(data.text);
-        } else {
-          setText("Teksti ei õnnestunud tuvastada.");
+          if (data.text) {
+            setText(data.text);
+          } else if (data.error) {
+            if (data.error.includes("quota")) {
+              setText(
+                "Kõnetuvastus ei ole veel aktiveerunud. Proovi mõne minuti pärast uuesti."
+              );
+            } else {
+              setText(`Viga: ${data.error}`);
+            }
+          } else {
+            setText("Teksti ei õnnestunud tuvastada.");
+          }
+        } catch (error) {
+          console.error(error);
+          setText(`Võrgu või brauseri viga: ${String(error)}`);
         }
       };
 
       mediaRecorder.start();
-
       mediaRecorderRef.current = mediaRecorder;
 
       setIsRecording(true);
@@ -67,7 +76,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-zinc-50">
       <h1 className="text-5xl font-bold mb-4 text-blue-600">
-        ÕPETAJA ÜTLEB
+        ÕPETAJA ÜTLES
       </h1>
 
       <p className="text-zinc-600 mb-8">
