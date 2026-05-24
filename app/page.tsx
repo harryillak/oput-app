@@ -6,7 +6,7 @@ export default function Home() {
   const [text, setText] = useState("");
 
   function handleMicrophoneClick() {
-    setText("See tekst tuli mikrofoninupu vajutusest.");
+    setText("TELEFONI TEST TOIMIB");
   }
 
   return (
