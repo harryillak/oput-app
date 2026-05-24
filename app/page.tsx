@@ -4,9 +4,42 @@ import { useState } from "react";
 
 export default function Home() {
   const [text, setText] = useState("");
+  const [isListening, setIsListening] = useState(false);
 
-  function handleMicrophoneClick() {
-    setText("TELEFONI TEST TOIMIB");
+  function startListening() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setText("Sinu brauser ei toeta kõnetuvastust.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "et-EE";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setText("Kuulan...");
+    };
+
+    recognition.onresult = (event) => {
+      const spokenText = event.results[0][0].transcript;
+      setText(spokenText);
+    };
+
+    recognition.onerror = () => {
+      setText("Kõnetuvastusel tekkis viga.");
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
   }
 
   return (
@@ -16,16 +49,15 @@ export default function Home() {
       </h1>
 
       <p className="text-zinc-600 mb-8">
-  Häälmärkmetest kirjalik tagasiside · mobiilitest
-</p>
+        Häälmärkmetest kirjalik tagasiside · mobiilitest
+      </p>
 
       <button
-  onClick={handleMicrophoneClick}
-  onTouchStart={handleMicrophoneClick}
-  className="bg-blue-600 text-white px-8 py-5 rounded-full text-3xl shadow-lg hover:bg-blue-700 transition"
->
-  🎤
-</button>
+        onClick={startListening}
+        className="bg-blue-600 text-white px-8 py-5 rounded-full text-3xl shadow-lg hover:bg-blue-700 transition"
+      >
+        {isListening ? "🎙️" : "🎤"}
+      </button>
 
       <textarea
         value={text}
