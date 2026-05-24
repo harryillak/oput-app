@@ -93,7 +93,7 @@ export default function Home() {
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="mt-8 w-full max-w-xl border border-zinc-300 rounded-xl p-4 bg-white"
+className="mt-8 w-full max-w-xl border border-zinc-300 rounded-xl p-4 bg-white text-zinc-800"
         rows={8}
         placeholder="Siia hakkab ilmuma õpetaja räägitud tekst..."
       />
