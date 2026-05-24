@@ -16,8 +16,8 @@ export default function Home() {
       </h1>
 
       <p className="text-zinc-600 mb-8">
-        Häälmärkmetest kirjalik tagasiside
-      </p>
+  Häälmärkmetest kirjalik tagasiside · mobiilitest
+</p>
 
       <button
   onClick={handleMicrophoneClick}
