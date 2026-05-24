@@ -18,8 +18,10 @@ export async function POST(request: Request) {
 
     const transcription = await openai.audio.transcriptions.create({
       file: audio,
-      model: "whisper-1",
+      model: "gpt-4o-transcribe",
       language: "et",
+      prompt:
+        "Tegemist on eesti keeles räägitud muusikaõpetaja tunni tagasisidega. Kasuta korrektset eesti kirjakeelt, loomulikku lausestruktuuri ja sobivaid kirjavahemärke. Tekstis võivad esineda õpilaste nimed, muusikaterminid, taktid, hingamine, toon, rütm, artikulatsioon, dünaamika, fraseerimine ja harjutamisjuhised.",
     });
 
     return Response.json({
