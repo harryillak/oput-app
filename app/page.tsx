@@ -202,7 +202,7 @@ export default function Home() {
         </h1>
 
         <p className="text-zinc-600 mb-8">
-          Häälmärkmetest kirjalik tagasiside
+          Häälmärkmed kirjalikuks tagasisideks
         </p>
 
         <div className="flex gap-3 mb-6 flex-wrap">
