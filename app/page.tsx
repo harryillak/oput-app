@@ -31,7 +31,7 @@ export default function Home() {
         <header className="flex justify-center pt-4">
           <Image
             src="/brand/opetaja-utles-logo.png"
-            alt="Õpetaja ütleb logo"
+            alt="Õpetaja ütles logo"
             width={260}
             height={260}
             priority
