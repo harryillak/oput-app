@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Õpetaja ütles",
-  description: "Häälmärkmetest kirjalik tagasiside õpetajale",
+  description: "Häälmärkmetest kirjalik tagasiside",
 };
 
 export default function RootLayout({
