@@ -1,339 +1,241 @@
 "use client";
 
-import { useRef, useState } from "react";
+import Image from "next/image";
+import { useState } from "react";
 
-type CommentItem = {
-  id: number;
-  time: string;
-  text: string;
+type AppPhase = "start" | "lesson" | "review";
+
+const BRAND = {
+  blue: "#2D5085",
+  orange: "#FF7D35",
+  lightBlue: "#EEF4FC",
+  lightOrange: "#FFF2EA",
 };
 
+const sampleNotes = [
+  "Täna oli toon vabam ja kandvam.",
+  "F-duur heliredel vajab aeglast harjutamist.",
+  "Fraasi alguses tuleb hingata rahulikumalt.",
+];
+
 export default function Home() {
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const [sessionFinished, setSessionFinished] = useState(false);
+  const [phase, setPhase] = useState<AppPhase>("start");
+  const [confirmed, setConfirmed] = useState(false);
 
-  const [text, setText] = useState("");
-  const [comments, setComments] = useState<CommentItem[]>([]);
-
-  const [feedbackDraft, setFeedbackDraft] = useState("");
-  const [isFeedbackConfirmed, setIsFeedbackConfirmed] =
-    useState(false);
-
-  const [isRecording, setIsRecording] = useState(false);
-
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-
-  function startSession() {
-    setSessionStarted(true);
-    setSessionFinished(false);
-
-    setComments([]);
-    setFeedbackDraft("");
-    setIsFeedbackConfirmed(false);
-
-    setText("Tunni märkmete kogumine algas.");
-  }
-
-  function finishSession() {
-    setSessionFinished(true);
-    setSessionStarted(false);
-
-    setText("Tunni märkmete kogumine on lõpetatud.");
-  }
-
-  function addComment(commentText: string) {
-    const now = new Date();
-
-    const newComment: CommentItem = {
-      id: Date.now(),
-      time: now.toLocaleTimeString("et-EE", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      text: commentText,
-    };
-
-    setComments((current) => [...current, newComment]);
-
-    setText("");
-  }
-
-  function updateComment(id: number, newText: string) {
-    setComments((current) =>
-      current.map((comment) =>
-        comment.id === id
-          ? { ...comment, text: newText }
-          : comment
-      )
-    );
-
-    setIsFeedbackConfirmed(false);
-  }
-
-  async function startRecording() {
-    if (!sessionStarted) {
-      setText("Alusta enne tunni märkmete kogumist.");
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-
-      const mediaRecorder = new MediaRecorder(stream);
-
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        try {
-          const audioBlob = new Blob(
-            audioChunksRef.current,
-            {
-              type: "audio/webm",
-            }
-          );
-
-          const formData = new FormData();
-
-          formData.append(
-            "audio",
-            audioBlob,
-            "recording.webm"
-          );
-
-          setText("Saadan heli kõnetuvastusse...");
-
-          const response = await fetch(
-            "/api/transcribe",
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-
-          const data = await response.json();
-
-          if (data.text) {
-            addComment(data.text);
-          } else if (data.error) {
-            setText(`Viga: ${data.error}`);
-          } else {
-            setText(
-              "Teksti ei õnnestunud tuvastada."
-            );
-          }
-        } catch (error) {
-          console.error(error);
-
-          setText(
-            `Võrgu või brauseri viga: ${String(
-              error
-            )}`
-          );
-        }
-      };
-
-      mediaRecorder.start();
-
-      mediaRecorderRef.current = mediaRecorder;
-
-      setIsRecording(true);
-
-      setText("Salvestan kommentaari...");
-    } catch (error) {
-      console.error(error);
-
-      setText(
-        "Mikrofoni kasutamine ei õnnestunud."
-      );
-    }
-  }
-
-  function stopRecording() {
-    mediaRecorderRef.current?.stop();
-
-    setIsRecording(false);
-  }
-
-  function generateFeedbackDraft() {
-    if (comments.length === 0) {
-      setText("Kommentaarid puuduvad.");
-      return;
-    }
-
-    const combinedText = comments
-      .map((comment) => comment.text)
-      .join(" ");
-
-    setFeedbackDraft(combinedText);
-
-    setIsFeedbackConfirmed(false);
-
-    setText("Tagasiside mustand loodud.");
-  }
-
-  function confirmFeedback() {
-    setIsFeedbackConfirmed(true);
-
-    setText("Tagasiside kinnitatud.");
-  }
-
-  async function copyFeedback() {
-    if (!isFeedbackConfirmed) return;
-
-    await navigator.clipboard.writeText(
-      feedbackDraft
-    );
-
-    setText("Kinnitatud tagasiside kopeeritud.");
-  }
+  const feedbackText =
+    "Täna oli toon vabam ja kandvam. F-duur heliredelit tuleb harjutada aeglaselt, pöörates tähelepanu sõrmestuse ette mõtlemisele. Fraasi alguses aitab rahulikum hingamine hoida mängu stabiilsena ja muusikaliselt selgemana.";
 
   return (
-    <main className="min-h-screen flex flex-col items-center p-8 bg-zinc-50">
-      <section className="w-full max-w-2xl flex flex-col items-center">
-        <h1 className="text-5xl font-bold mb-4 text-blue-600">
-          ÕPETAJA ÜTLES
-        </h1>
-
-        <p className="text-zinc-600 mb-8">
-          Häälmärkmed kirjalikuks tagasisideks
-        </p>
-
-        <div className="flex gap-3 mb-6 flex-wrap">
-          <button
-            onClick={startSession}
-            className="bg-zinc-900 text-white px-5 py-3 rounded-xl"
-          >
-            Alusta tunni märkmeid
-          </button>
-
-          <button
-            onClick={finishSession}
-            disabled={comments.length === 0}
-            className="bg-zinc-200 text-zinc-900 px-5 py-3 rounded-xl disabled:opacity-40"
-          >
-            Lõpeta kogumine
-          </button>
-
-          <button
-            onClick={generateFeedbackDraft}
-            disabled={comments.length === 0}
-            className="bg-amber-600 text-white px-5 py-3 rounded-xl disabled:opacity-40"
-          >
-            Koosta mustand
-          </button>
-        </div>
-
-        <button
-          onClick={
-            isRecording
-              ? stopRecording
-              : startRecording
-          }
-          className="bg-blue-600 text-white px-8 py-5 rounded-full text-3xl shadow-lg hover:bg-blue-700 transition"
-        >
-          {isRecording ? "⏹️" : "🎤"}
-        </button>
-
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          className="mt-8 w-full border border-zinc-300 rounded-xl p-4 bg-white text-zinc-900"
-          rows={3}
-          placeholder="Siia ilmub hetkeseis või veateade..."
-        />
-
-        <section className="mt-8 w-full">
-          <h2 className="text-xl font-semibold mb-3">
-            Tunni kommentaarid
-          </h2>
-
-          {comments.length === 0 ? (
-            <p className="text-zinc-500">
-              Kommentaare ei ole veel lisatud.
-            </p>
-          ) : (
-            <ol className="space-y-3">
-              {comments.map((comment, index) => (
-                <li
-                  key={comment.id}
-                  className="bg-white border border-zinc-200 rounded-xl p-4"
-                >
-                  <div className="text-sm text-zinc-500 mb-2">
-                    {index + 1}. kommentaar ·{" "}
-                    {comment.time}
-                  </div>
-
-                  <textarea
-                    value={comment.text}
-                    onChange={(e) =>
-                      updateComment(
-                        comment.id,
-                        e.target.value
-                      )
-                    }
-                    className="w-full border border-zinc-200 rounded-lg p-3 text-zinc-900 bg-zinc-50"
-                    rows={3}
-                  />
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-
-        <section className="mt-10 w-full">
-          <h2 className="text-xl font-semibold mb-3">
-            Tagasiside mustand
-          </h2>
-
-          <textarea
-            value={feedbackDraft}
-            onChange={(e) => {
-              setFeedbackDraft(e.target.value);
-              setIsFeedbackConfirmed(false);
-            }}
-            className="w-full border border-zinc-300 rounded-xl p-4 bg-white text-zinc-900"
-            rows={8}
-            placeholder="Siia ilmub AI koostatud tagasiside mustand..."
+    <main className="min-h-screen bg-white text-slate-900">
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 py-8">
+        <header className="flex justify-center pt-4">
+          <Image
+            src="/brand/opetaja-utles-logo.png"
+            alt="Õpetaja ütleb logo"
+            width={260}
+            height={260}
+            priority
+            className="h-auto w-56"
           />
+        </header>
 
-          <p className="mt-2 text-sm text-amber-700">
-            AI koostatud mustand. Palun loe üle,
-            paranda ja kinnita enne kasutamist.
-          </p>
+        {phase === "start" && (
+          <section className="flex flex-1 flex-col items-center justify-center text-center">
+            <p className="mt-6 text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+              Häälmärkmetest kirjalik tagasiside
+            </p>
 
-          <div className="flex gap-3 mt-4 flex-wrap">
-            <button
-              onClick={confirmFeedback}
-              disabled={!feedbackDraft}
-              className="bg-green-700 text-white px-5 py-3 rounded-xl disabled:opacity-40"
+            <h1
+              className="mt-4 text-3xl font-bold tracking-tight"
+              style={{ color: BRAND.blue }}
             >
-              Kinnitan tagasiside
+              Õpetaja ütles
+            </h1>
+
+            <p className="mt-4 max-w-sm text-base leading-7 text-slate-600">
+              Töövahend õpetajale, kes soovib tunni jooksul öeldud tähelepanekud
+              muuta toimetatud kirjalikuks tagasisideks.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setPhase("lesson")}
+              className="mt-8 w-full rounded-2xl px-6 py-4 text-base font-semibold text-white shadow-lg transition active:scale-[0.98]"
+              style={{ backgroundColor: BRAND.blue }}
+            >
+              Alusta tunni märkmete kogumist
             </button>
 
-            <button
-              onClick={copyFeedback}
-              disabled={!isFeedbackConfirmed}
-              className="bg-blue-600 text-white px-5 py-3 rounded-xl disabled:opacity-40"
-            >
-              Kopeeri tagasiside
-            </button>
-          </div>
-        </section>
-
-        {sessionFinished && comments.length > 0 && (
-          <div className="mt-8 p-4 rounded-xl bg-green-50 border border-green-200 text-green-900 w-full">
-            Kogumine lõpetatud. Kommentaare kokku:{" "}
-            {comments.length}.
-          </div>
+            <div className="mt-8 grid w-full gap-3 text-left">
+              <FeatureRow
+                color={BRAND.blue}
+                background={BRAND.lightBlue}
+                title="Õpetaja räägib"
+                text="Tunni jooksul kogud lühikesi häälemärkmeid."
+              />
+              <FeatureRow
+                color={BRAND.orange}
+                background={BRAND.lightOrange}
+                title="Rakendus vormistab"
+                text="Märkmetest tekib kirjaliku tagasisideteksti ülevaatamist vajav versioon."
+              />
+              <FeatureRow
+                color={BRAND.blue}
+                background={BRAND.lightBlue}
+                title="Õpetaja kinnitab"
+                text="Lõplik tekst muutub kopeeritavaks alles pärast ülevaatamist."
+              />
+            </div>
+          </section>
         )}
-      </section>
+
+        {phase === "lesson" && (
+          <section className="flex flex-1 flex-col">
+            <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Käimasolev tund</p>
+              <h2
+                className="mt-1 text-2xl font-bold"
+                style={{ color: BRAND.blue }}
+              >
+                Jasper Poll
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">Altsarv · 1. klass</p>
+            </div>
+
+            <button
+              type="button"
+              className="mx-auto mt-10 flex h-32 w-32 items-center justify-center rounded-full text-xl font-bold text-white shadow-xl transition active:scale-[0.97]"
+              style={{ backgroundColor: BRAND.orange }}
+            >
+              Salvestan
+            </button>
+
+            <p className="mt-4 text-center text-sm text-slate-500">
+              Lisa erasldi lühikesed tähelepanekud millest koostame kokkuvõte.
+            </p>
+
+            <div className="mt-8 space-y-3">
+              {sampleNotes.map((note, index) => (
+                <div
+                  key={note}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700"
+                >
+                  <span
+                    className="mr-2 font-semibold"
+                    style={{ color: BRAND.blue }}
+                  >
+                    {index + 1}.
+                  </span>
+                  {note}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-auto pt-8">
+              <button
+                type="button"
+                onClick={() => setPhase("review")}
+                className="w-full rounded-2xl px-6 py-4 text-base font-semibold text-white shadow-lg transition active:scale-[0.98]"
+                style={{ backgroundColor: BRAND.blue }}
+              >
+                Koosta tagasiside
+              </button>
+            </div>
+          </section>
+        )}
+
+        {phase === "review" && (
+          <section className="flex flex-1 flex-col">
+            <div className="mt-6">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+                Ülevaatus
+              </p>
+              <h2
+                className="mt-3 text-2xl font-bold"
+                style={{ color: BRAND.blue }}
+              >
+                Tagasiside enne kinnitamist
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Tekst ei ole veel lõplik. Loe see üle, paranda vajadusel ja 
+               alles siis kinnita.
+              </p>
+            </div>
+
+            <textarea
+              defaultValue={feedbackText}
+              className="mt-6 min-h-56 w-full resize-none rounded-3xl border border-slate-200 bg-white p-5 text-base leading-7 text-slate-800 shadow-sm outline-none focus:border-[#2D5085]"
+            />
+
+            <label className="mt-5 flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(event) => setConfirmed(event.target.checked)}
+                className="mt-1 h-5 w-5"
+              />
+              <span>
+                Tagasiside on üle vaadatud ja kinnitan, et see on sobiv minu
+                tekstina kasutamiseks.
+              </span>
+            </label>
+
+            <div className="mt-auto grid gap-3 pt-8">
+              <button
+                type="button"
+                disabled={!confirmed}
+                className="w-full rounded-2xl px-6 py-4 text-base font-semibold text-white shadow-lg transition enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                style={confirmed ? { backgroundColor: BRAND.blue } : undefined}
+              >
+                Kopeeri tagasiside
+              </button>
+<p className="text-center text-xs leading-5 text-slate-500">
+  Tekst kopeeritakse lõikelauale. Seejärel saad selle kleepida e-päevikusse või mujale.
+</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmed(false);
+                  setPhase("lesson");
+                }}
+                className="w-full rounded-2xl border border-slate-200 px-6 py-4 text-base font-semibold text-slate-700 transition active:scale-[0.98]"
+              >
+                Tagasi märkmete juurde
+              </button>
+            </div>
+          </section>
+        )}
+      </div>
     </main>
+  );
+}
+
+function FeatureRow({
+  color,
+  background,
+  title,
+  text,
+}: {
+  color: string;
+  background: string;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div
+      className="flex gap-4 rounded-2xl p-4"
+      style={{ backgroundColor: background }}
+    >
+      <div
+        className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+        style={{ backgroundColor: color }}
+      >
+        ÕÜ
+      </div>
+      <div>
+        <h3 className="font-semibold text-slate-900">{title}</h3>
+        <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
+      </div>
+    </div>
   );
 }
