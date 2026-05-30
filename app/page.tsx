@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 
 type AppPhase = "start" | "lesson" | "review";
+type NoteType = "comment" | "task";
 
 const BRAND = {
   blue: "#2D5085",
@@ -21,6 +22,7 @@ const sampleNotes = [
 export default function Home() {
   const [phase, setPhase] = useState<AppPhase>("start");
   const [confirmed, setConfirmed] = useState(false);
+  const [selectedNoteType, setSelectedNoteType] = useState<NoteType>("comment");
 
   const feedbackText =
     "Täna oli toon vabam ja kandvam. F-duur heliredelit tuleb harjutada aeglaselt, pöörates tähelepanu sõrmestuse ette mõtlemisele. Fraasi alguses aitab rahulikum hingamine hoida mängu stabiilsena ja muusikaliselt selgemana.";
@@ -102,9 +104,28 @@ export default function Home() {
               <p className="mt-1 text-sm text-slate-600">Altsarv · 1. klass</p>
             </div>
 
+            <div className="mt-8 rounded-3xl bg-slate-50 p-4">
+              <p className="text-center text-sm font-semibold text-slate-700">
+                Mida salvestada?
+              </p>
+
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <NoteTypeButton
+                  label="Kommentaar"
+                  active={selectedNoteType === "comment"}
+                  onClick={() => setSelectedNoteType("comment")}
+                />
+                <NoteTypeButton
+                  label="Ülesanne"
+                  active={selectedNoteType === "task"}
+                  onClick={() => setSelectedNoteType("task")}
+                />
+              </div>
+            </div>
+
             <button
               type="button"
-              className="mx-auto mt-10 flex h-32 w-32 items-center justify-center rounded-full text-xl font-bold text-white shadow-xl transition active:scale-[0.97]"
+              className="mx-auto mt-8 flex h-32 w-32 items-center justify-center rounded-full text-xl font-bold text-white shadow-xl transition active:scale-[0.97]"
               style={{ backgroundColor: BRAND.orange }}
             >
               Salvestan
@@ -209,6 +230,32 @@ export default function Home() {
     </main>
   );
 }
+
+function NoteTypeButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-2xl px-4 py-3 text-sm font-semibold transition active:scale-[0.98]"
+      style={{
+        backgroundColor: active ? BRAND.blue : "#FFFFFF",
+        color: active ? "#FFFFFF" : "#334155",
+        border: active ? "1px solid #2D5085" : "1px solid #E2E8F0",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 
 function FeatureRow({
   color,
