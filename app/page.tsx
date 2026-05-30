@@ -111,7 +111,7 @@ export default function Home() {
             </button>
 
             <p className="mt-4 text-center text-sm text-slate-500">
-              Lisa erasldi lühikesed tähelepanekud millest koostame kokkuvõte.
+              Lisa eraldi lühikesi tähelepanekuid millest koostame koondi.
             </p>
 
             <div className="mt-8 space-y-3">
