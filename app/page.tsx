@@ -13,10 +13,14 @@ const BRAND = {
   lightOrange: "#FFF2EA",
 };
 
-const sampleNotes = [
+const sampleComments = [
   "Täna oli toon vabam ja kandvam.",
-  "F-duur heliredel vajab aeglast harjutamist.",
   "Fraasi alguses tuleb hingata rahulikumalt.",
+];
+
+const sampleTasks = [
+  "Harjuta F-duur heliredelit aeglases tempos.",
+  "Järgmiseks korraks pööra tähelepanu sõrmestuse ette mõtlemisele.",
 ];
 
 export default function Home() {
@@ -135,21 +139,18 @@ export default function Home() {
               Lisa eraldi lühikesi tähelepanekuid millest koostame koondi.
             </p>
 
-            <div className="mt-8 space-y-3">
-              {sampleNotes.map((note, index) => (
-                <div
-                  key={note}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700"
-                >
-                  <span
-                    className="mr-2 font-semibold"
-                    style={{ color: BRAND.blue }}
-                  >
-                    {index + 1}.
-                  </span>
-                  {note}
-                </div>
-              ))}
+            <div className="mt-8 space-y-4">
+              <NoteListSection
+                title="Kommentaarid"
+                items={sampleComments}
+                accentColor={BRAND.blue}
+              />
+
+              <NoteListSection
+                title="Ülesanded"
+                items={sampleTasks}
+                accentColor={BRAND.orange}
+              />
             </div>
 
             <div className="mt-auto pt-8">
@@ -228,6 +229,38 @@ export default function Home() {
         )}
       </div>
     </main>
+  );
+}
+
+function NoteListSection({
+  title,
+  items,
+  accentColor,
+}: {
+  title: string;
+  items: string[];
+  accentColor: string;
+}) {
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h3 className="text-sm font-semibold" style={{ color: accentColor }}>
+        {title}
+      </h3>
+
+      <div className="mt-3 space-y-2">
+        {items.map((item, index) => (
+          <div
+            key={item}
+            className="rounded-2xl bg-slate-50 p-3 text-sm leading-6 text-slate-700"
+          >
+            <span className="mr-2 font-semibold" style={{ color: accentColor }}>
+              {index + 1}.
+            </span>
+            {item}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
